@@ -2,13 +2,14 @@ package com.example.workflow.dmn;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.xml.namespace.QName;
+
 import org.kie.dmn.api.marshalling.DMNMarshaller;
 import org.kie.dmn.backend.marshalling.v1x.DMNMarshallerFactory;
-import org.kie.dmn.model.api.DRGElement;
-import org.kie.dmn.model.api.Decision;
 import org.kie.dmn.model.api.Definitions;
 import org.kie.dmn.model.api.InputData;
 import org.kie.dmn.model.api.ItemDefinition;
@@ -18,51 +19,41 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 
-
-
 @Service
-public class DmnParser {
+public class DMNDataTypePrinter {
 
 	@Autowired
 	private ResourceLoader resourceLoader;
-
-	public void executeDMN() throws IOException {
-
-
-		 ClassPathResource resource = new ClassPathResource("test.dmn");
-		    String dmnContent = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
-		    
-
-		DMNMarshaller marshaller = DMNMarshallerFactory.newDefaultMarshaller();
-		Definitions definitions = marshaller.unmarshal(dmnContent);
-		
-		//System.out.println("1: " +definitions.getChildren());
-		
-		List<ItemDefinition> itemDefinitionList = definitions.getItemDefinition();
-
-		for (ItemDefinition itemDefinition : itemDefinitionList) {
-		    
-		        iterateItemDefinitionComponents(itemDefinition, 0);
-		    
-		}
-		
-		
-		List<InputData> inputDataList = definitions.getDrgElement().stream()
-				.filter(element -> element instanceof InputData).map(element -> (InputData) element)
-				.collect(Collectors.toList());
-		
-		System.out.println(inputDataList.size());
-
-		for (InputData inputData : inputDataList) {
-		//	System.out.print(" InputData id: " + inputData.getId());
-			System.out.print(" InputData name: " + inputData.getName());
-			System.out.println(" Data_type: " + inputData.getVariable().getTypeRef());
-			
-			
-		}
-
-	}
 	
+	public void executeDMN() throws IOException {
+	    ClassPathResource resource = new ClassPathResource("text.dmn");
+	    String dmnContent = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
+
+	    DMNMarshaller marshaller = DMNMarshallerFactory.newDefaultMarshaller();
+	    Definitions definitions = marshaller.unmarshal(dmnContent);
+
+	    List<InputData> inputDataList = definitions.getDrgElement().stream()
+	            .filter(element -> element instanceof InputData)
+	            .map(element -> (InputData) element)
+	            .collect(Collectors.toList());
+
+	    List<ItemDefinition> inputItemDefinitions = new ArrayList<>();
+
+	    for (InputData inputData : inputDataList) {
+	        ItemDefinition itemDefinition = findItemDefinition(definitions, inputData.getVariable().getTypeRef());
+	        if (itemDefinition != null) {
+	            inputItemDefinitions.add(itemDefinition);
+	        }
+	    }
+
+	    for (ItemDefinition inputItemDefinition : inputItemDefinitions) {
+	        iterateItemDefinitionComponents(inputItemDefinition, 0);
+	    }
+	}
+
+
+
+
 	// Recursive function to iterate over the components of an ItemDefinition
 	private static void iterateItemDefinitionComponents(ItemDefinition itemDefinition, int level) {
 	    String indentation = getIndentation(level);
@@ -88,5 +79,11 @@ public class DmnParser {
 	
 	
 
-	    
+	private ItemDefinition findItemDefinition(Definitions definitions, QName typeRef) {
+	    return definitions.getItemDefinition().stream()
+	            .filter(itemDefinition -> itemDefinition.getName().equals(typeRef.getLocalPart()))
+	            .findFirst()
+	            .orElse(null);
+	}
 }
+	    

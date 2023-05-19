@@ -7,14 +7,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class MyCommandLineRunner implements CommandLineRunner {
 	
+	
+	
 	@Autowired
-	private DmnParser dmnParser;
+	private DMNDataTypePrinter d;
 
     @Override
     public void run(String... args) throws Exception {
         // This code will run when the application starts up
     	
-    	dmnParser.executeDMN();
+    	
+    	d.executeDMN();
         
     }
 }
