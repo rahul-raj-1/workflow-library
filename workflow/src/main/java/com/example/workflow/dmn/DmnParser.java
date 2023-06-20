@@ -2,13 +2,13 @@ package com.example.workflow.dmn;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.stream.Collectors; 
 
 import org.kie.dmn.api.marshalling.DMNMarshaller;
 import org.kie.dmn.backend.marshalling.v1x.DMNMarshallerFactory;
-import org.kie.dmn.model.api.DRGElement;
-import org.kie.dmn.model.api.Decision;
 import org.kie.dmn.model.api.Definitions;
 import org.kie.dmn.model.api.InputData;
 import org.kie.dmn.model.api.ItemDefinition;
@@ -29,15 +29,19 @@ public class DmnParser {
 	public void executeDMN() throws IOException {
 
 
-		 ClassPathResource resource = new ClassPathResource("test.dmn");
+		 ClassPathResource resource = new ClassPathResource("text.dmn");
 		    String dmnContent = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
 		    
 
 		DMNMarshaller marshaller = DMNMarshallerFactory.newDefaultMarshaller();
 		Definitions definitions = marshaller.unmarshal(dmnContent);
 		
+		 
+		
 		//System.out.println("1: " +definitions.getChildren());
 		
+        Map<String, String> inputDataMap = new HashMap<>();
+
 		List<ItemDefinition> itemDefinitionList = definitions.getItemDefinition();
 
 		for (ItemDefinition itemDefinition : itemDefinitionList) {
